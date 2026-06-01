@@ -19,6 +19,7 @@ Open http://127.0.0.1:5050 in your browser.
 | `app.py` | Flask backend — physics engine + `/compute` API |
 | `serve.py` | Waitress WSGI launcher (no tty issues) |
 | `templates/index.html` | Single-page UI (Bootstrap 5 + Plotly.js) |
+| `index.html` | Generated static page published to GitHub Pages |
 
 ## Inputs
 
