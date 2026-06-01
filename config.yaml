@@ -1,0 +1,40 @@
+# VROOMM ETC — Default Configuration
+# Exposure Time Calculator for the VROOMM spectrograph at the OMM 1.6-m telescope
+
+telescope:
+  primary_diameter_cm: 160       # OMM 1.6-m primary mirror diameter
+  name: "OMM 1.6-m"
+
+instrument:
+  name: "VROOMM"
+  central_wavelength_a: 6204.29  # Central wavelength in Angstroms
+  resolution: 120000             # Spectral resolving power R = λ/δλ
+  pixel_sampling_kms: 1.0        # Velocity sampling per pixel (km/s)
+  wavelength_range_nm: [600, 850] # Operating wavelength range (nm)
+
+efficiency:
+  total: 0.10                    # End-to-end throughput (telescope + instrument + detector QE)
+
+detector:
+  spatial_extent_pix: 8          # Height of spectral trace on detector (pixels)
+  dark_current_e_per_s_per_pix: 1.6e-4   # Dark current (e-/s/pixel)
+  clock_induced_charges_e_per_pix: 0.001  # CIC per pixel per readout (EMCCD)
+  read_noise_e: 0.0              # Effective read noise (negligible for EMCCD — CIC dominates)
+  saturation_e_per_pix_per_frame: 5.0    # Max linear signal per pixel per frame (EMCCD ~5 e-)
+
+photometry:
+  band: "r (SDSS)"
+  zero_point_erg_per_cm2_s_a: 2.49767e-9  # Flux of a mag=0 star in the SDSS r band
+  mag_min: 5.0                   # Brightest allowed target magnitude
+  mag_max: 20.0                  # Brightest allowed target magnitude
+
+defaults:
+  exposure_time_s: 1800          # Default total exposure time (s)
+  frame_rate_hz: 4.0             # EMCCD frame rate (Hz); n_sub = round(t_exp × frame_rate)
+  target_magnitude: 14.0         # Default target magnitude for SNR-vs-time plot
+
+rv_references:
+  # Approximate RV precision achievable with a mid-M dwarf at these SNR per resolution element
+  - {snr: 200, label: "~1 m/s", color: "green"}
+  - {snr: 40,  label: "~5 m/s", color: "orange"}
+  - {snr: 10,  label: "~30 m/s", color: "red"}

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VROOMM ETC — OMM 1.6-m</title>
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        crossorigin="anonymous"/>
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+
+  <style>
+    :root {
+      --omm-blue:    #1a3a5c;
+      --omm-accent:  #2e88c8;
+      --bg-light:    #f4f7fb;
+      --border-col:  #d0d9e6;
+    }
+
+    body {
+      background: var(--bg-light);
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      color: #1a1a2e;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
+    header {
+      background: var(--omm-blue);
+      color: #fff;
+      padding: 18px 32px 14px;
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+    }
+    header h1 { font-size: 1.55rem; font-weight: 700; margin: 0; letter-spacing: .03em; }
+    header p  { font-size: .85rem; opacity: .75; margin: 0; }
+
+    /* ── Layout ──────────────────────────────────────────────────── */
+    #layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+      padding: 20px 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── Control panel ───────────────────────────────────────────── */
+    #controls {
+      background: #fff;
+      border: 1px solid var(--border-col);
+      border-radius: 10px;
+      padding: 18px 16px;
+      height: fit-content;
+      position: sticky;
+      top: 16px;
+    }
+    #controls h5 {
+      font-size: .80rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--omm-accent);
+      margin: 18px 0 8px;
+      border-bottom: 1px solid var(--border-col);
+      padding-bottom: 4px;
+    }
+    #controls h5:first-child { margin-top: 0; }
+
+    .param-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 6px;
+    }
+    .param-row label {
+      font-size: .82rem;
+      color: #444;
+      min-width: 0;
+      flex: 1;
+    }
+    .param-row input[type="range"] { flex: 1.2; min-width: 0; accent-color: var(--omm-accent); }
+    .param-row input[type="number"],
+    .param-row input[type="text"]  {
+      width: 78px;
+      font-size: .82rem;
+      border: 1px solid var(--border-col);
+      border-radius: 5px;
+      padding: 3px 6px;
+    }
+
+    .badge-snr {
+      font-size: .75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ── Summary cards ───────────────────────────────────────────── */
+    #summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card-stat {
+      background: #fff;
+      border: 1px solid var(--border-col);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .card-stat .val {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--omm-blue);
+      line-height: 1.1;
+    }
+    .card-stat .val.good  { color: #1b7f4f; }
+    .card-stat .val.warn  { color: #c27d00; }
+    .card-stat .val.bad   { color: #c0392b; }
+    .card-stat .lbl {
+      font-size: .78rem;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    /* ── Plots ───────────────────────────────────────────────────── */
+    #plots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .plot-box {
+      background: #fff;
+      border: 1px solid var(--border-col);
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    /* ── Noise budget ────────────────────────────────────────────── */
+    #noise-box {
+      background: #fff;
+      border: 1px solid var(--border-col);
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+    #noise-box h6 {
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--omm-accent);
+      margin-bottom: 10px;
+    }
+    .bar-stack {
+      height: 22px;
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+    }
+    .bar-seg { height: 100%; transition: width .35s; }
+    .bar-shot  { background: #2e88c8; }
+    .bar-cic   { background: #e07b39; }
+    .bar-dark  { background: #7b5ea7; }
+    .noise-legend {
+      display: flex; gap: 16px; margin-top: 8px;
+      font-size: .78rem; color: #555;
+    }
+    .leg-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+
+    .spinner-border { width: 1rem; height: 1rem; }
+
+    /* ── Advanced toggle ─────────────────────────────────────────── */
+    #adv-toggle { cursor: pointer; font-size: .78rem; color: var(--omm-accent); text-decoration: underline; }
+    #adv-section { display: none; }
+    #adv-section.open { display: block; }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:1.2rem">
+    <img src="/static/logo.png" alt="VROOMM logo"
+         style="height:52px;width:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.25))"/>
+    <div>
+      <h1 style="margin:0;font-size:1.35rem;line-height:1.15">Exposure Time Calculator</h1>
+      <p style="margin:0">OMM 1.6-m telescope &nbsp;·&nbsp; SDSS <em>r</em> band &nbsp;·&nbsp; SNR per resolution element</p>
+    </div>
+  </div>
+</header>
+
+<div id="layout">
+
+  <!-- ──────────────────── CONTROL PANEL ──────────────────────── -->
+  <aside id="controls">
+
+    <h5>Exposure</h5>
+
+    <div class="param-row">
+      <label for="exptime-slider">t<sub>exp</sub> (s)</label>
+      <input type="range" id="exptime-slider"
+             min="0" max="1000" step="1" value="718"/>
+      <input type="number" id="exptime-val"
+             min="1" max="10800" step="1" value="1800" style="width:72px"/>
+    </div>
+
+    <div class="param-row">
+      <label for="framerate-val">Frame rate (Hz)</label>
+      <input type="number" id="framerate-val"
+             min="0.001" max="100" step="0.5" value="4" style="width:72px; margin-left:auto"/>
+    </div>
+    <div class="param-row">
+      <label for="frametime-val">Time / frame (s)</label>
+      <input type="number" id="frametime-val"
+             min="0.01" max="1000" step="0.01" value="0.25" style="width:72px; margin-left:auto"/>
+    </div>
+    <div class="param-row" style="color:#777;font-size:.78rem">
+      <span>Sub-exposures:</span>
+      <strong id="nsub-computed">7200</strong>
+    </div>
+
+    <h5>Target</h5>
+
+    <div class="param-row">
+      <label for="tmag-slider">r mag</label>
+      <input type="range" id="tmag-slider"
+             min="5" max="20" step="0.5" value="14"/>
+      <input type="number" id="tmag-val"
+             min="5" max="20" step="0.5" value="14" style="width:72px"/>
+    </div>
+
+
+
+    <h5>Instrument</h5>
+
+    <div class="param-row">
+      <label>Telescope</label>
+      <span style="font-size:.82rem;color:#444" id="lbl-telescope">OMM 1.6-m</span>
+    </div>
+    <div class="param-row">
+      <label>λ₀ (Å)</label>
+      <span style="font-size:.82rem;color:#444" id="lbl-wave">6204.29</span>
+    </div>
+    <div class="param-row">
+      <label>Resolution</label>
+      <span style="font-size:.82rem;color:#444" id="lbl-res">120 000</span>
+    </div>
+
+    <div style="margin-top:8px">
+      <span id="adv-toggle" onclick="toggleAdv()">&#9654; Advanced parameters</span>
+    </div>
+
+    <div id="adv-section">
+      <div class="param-row" style="margin-top:10px">
+        <label for="eff-val">Efficiency (%)</label>
+        <input type="number" id="eff-val"
+               min="1" max="100" step="0.5" value="10" style="width:72px"/>
+      </div>
+      <div class="param-row">
+        <label for="spatial-val">Spatial pix</label>
+        <input type="number" id="spatial-val"
+               min="1" max="50" step="1" value="8" style="width:72px"/>
+      </div>
+      <div class="param-row">
+        <label for="dark-val">Dark (e⁻/s/pix)</label>
+        <input type="number" id="dark-val"
+               min="0" max="1" step="0.00001" value="0.00016" style="width:88px"/>
+      </div>
+      <div class="param-row">
+        <label for="cic-val">CIC (e⁻/pix/read)</label>
+        <input type="number" id="cic-val"
+               min="0" max="1" step="0.0001" value="0.001" style="width:88px"/>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary mt-2 w-100"
+              onclick="resetAdvanced()">Reset to defaults</button>
+    </div>
+
+  </aside>
+
+  <!-- ──────────────────── MAIN AREA ───────────────────────────── -->
+  <main>
+
+    <!-- Summary cards -->
+    <div id="summary">
+      <div class="card-stat">
+        <div class="val" id="card-snr">—</div>
+        <div class="lbl">SNR at r = <span id="card-mag-lbl">14</span></div>
+      </div>
+      <div class="card-stat">
+        <div class="val" id="card-nphot">—</div>
+        <div class="lbl">Signal photons / resel</div>
+      </div>
+      <div class="card-stat">
+        <div class="val" id="card-nsub">—</div>
+        <div class="lbl">Sub-exposures (<span id="card-fr-lbl">4</span> Hz)</div>
+      </div>
+      <div class="card-stat">
+        <div class="val" id="card-epix">—</div>
+        <div class="lbl">e⁻/pix/frame &nbsp;<span style="font-size:.72rem;font-weight:400" id="card-epix-lbl"></span></div>
+      </div>
+    </div>
+
+    <!-- Plots -->
+    <div id="plots">
+      <div class="plot-box">
+        <div id="plot-snr-mag" style="height:340px"></div>
+      </div>
+      <div class="plot-box">
+        <div id="plot-snr-time" style="height:340px"></div>
+      </div>
+      <div class="plot-box" style="grid-column: span 2">
+        <div id="plot-epix-mag" style="height:280px"></div>
+      </div>
+    </div>
+
+    <!-- Noise budget -->
+    <div id="noise-box">
+      <h6>Noise budget at selected target &nbsp;<span id="nb-label" style="font-weight:normal;text-transform:none;letter-spacing:0;color:#333"></span></h6>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:center">
+        <div>
+          <div class="bar-stack" id="bar-stack"></div>
+          <div class="noise-legend">
+            <span><span class="leg-dot" style="background:#2e88c8"></span>Shot (<span id="b-shot">—</span>%)</span>
+            <span><span class="leg-dot" style="background:#e07b39"></span>CIC (<span id="b-cic">—</span>%)</span>
+            <span><span class="leg-dot" style="background:#7b5ea7"></span>Dark (<span id="b-dark">—</span>%)</span>
+          </div>
+        </div>
+        <div style="font-size:.83rem; color:#444; line-height:1.7">
+          Signal photons: <strong id="nb-phot">—</strong><br/>
+          CIC electrons&nbsp;: <strong id="nb-cic-e">—</strong> &nbsp;(<span id="nsub-echo">1</span> readout×<span id="nb-spix">8</span> pix × 0.001)<br/>
+          Dark electrons : <strong id="nb-dark-e">—</strong>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ───────────────────────── JavaScript ──────────────────────────────── -->
+<script>
+// Inject server-side config
+const CFG = {{ config_json | safe }};
+
+// ── Log slider helpers (exptime) ────────────────────────────────────────
+const EXP_MIN = 1, EXP_MAX = 10800;
+function sliderToExp(v)  { return Math.round(EXP_MIN * Math.pow(EXP_MAX / EXP_MIN, v / 1000)); }
+function expToSlider(t)  { return Math.round(Math.log(t / EXP_MIN) / Math.log(EXP_MAX / EXP_MIN) * 1000); }
+
+// ── Sync linked slider↔number inputs ────────────────────────────────────
+function linkSliderNumber(sliderId, numId, onchange) {
+  const sl = document.getElementById(sliderId);
+  const nm = document.getElementById(numId);
+  sl.addEventListener('input', () => { nm.value = sl.value; onchange(); });
+  nm.addEventListener('change', () => {
+    sl.value = nm.value; onchange();
+  });
+}
+
+function linkLogSliderNumber(sliderId, numId, onchange) {
+  const sl = document.getElementById(sliderId);
+  const nm = document.getElementById(numId);
+  sl.addEventListener('input', () => { nm.value = sliderToExp(+sl.value); onchange(); });
+  nm.addEventListener('change', () => { sl.value = expToSlider(+nm.value); onchange(); });
+}
+
+// ── Physics (mirrors app.py exactly) ────────────────────────────────────
+const H_ERG_S = 6.62607015e-27;
+const C_CM_S  = 2.99792458e10;
+
+function photonsPerResel(mag, exptimeS, cfg) {
+  const area = Math.PI * Math.pow(cfg.telescope.primary_diameter_cm / 2, 2);
+  const w0   = cfg.instrument.central_wavelength_a;
+  const R    = cfg.instrument.resolution;
+  const eff  = cfg.efficiency.total;
+  const zp   = cfg.photometry.zero_point_erg_per_cm2_s_a;
+
+  const dLambda = w0 / R;
+  const Eph = H_ERG_S * C_CM_S / (w0 * 1e-8);   // photon energy in erg
+  const flux = zp * area * Math.pow(10, -mag / 2.5);
+  return flux * dLambda * exptimeS * eff / Eph;
+}
+
+function computeSNR(mag, exptimeS, nSub, cfg) {
+  const Ntot   = photonsPerResel(mag, exptimeS, cfg);
+  const sp     = cfg.detector.spatial_extent_pix;
+  const cic    = cfg.detector.clock_induced_charges_e_per_pix;
+  const dark   = cfg.detector.dark_current_e_per_s_per_pix;
+  const cicVar  = cic  * sp * nSub;
+  const darkVar = dark * sp * exptimeS;
+  const variance = Ntot + cicVar + darkVar;
+  return { snr: variance > 0 ? Ntot / Math.sqrt(variance) : 0,
+           Ntot, cicVar, darkVar };
+}
+
+// ── Read current UI values ───────────────────────────────────────────────
+function getParams() {
+  const cfg = JSON.parse(JSON.stringify(CFG));   // deep copy
+  cfg.efficiency.total = parseFloat(document.getElementById('eff-val').value) / 100;
+  cfg.detector.spatial_extent_pix         = parseInt(document.getElementById('spatial-val').value);
+  cfg.detector.dark_current_e_per_s_per_pix = parseFloat(document.getElementById('dark-val').value);
+  cfg.detector.clock_induced_charges_e_per_pix = parseFloat(document.getElementById('cic-val').value);
+  const exptime   = parseFloat(document.getElementById('exptime-val').value);
+  const frameRate = parseFloat(document.getElementById('framerate-val').value) || 4;
+  const nSub      = Math.max(1, Math.round(exptime * frameRate));
+  return {
+    cfg,
+    exptime,
+    frameRate,
+    nSub,
+    tMag: parseFloat(document.getElementById('tmag-val').value),
+  };
+}
+
+// ── Build magnitude grid ─────────────────────────────────────────────────
+function linspace(a, b, n) {
+  const arr = [];
+  for (let i = 0; i < n; i++) arr.push(a + (b - a) * i / (n - 1));
+  return arr;
+}
+function logspace(a, b, n) {
+  const arr = [];
+  for (let i = 0; i < n; i++) arr.push(Math.pow(10, a + (b - a) * i / (n - 1)));
+  return arr;
+}
+
+// ── Colour helper for SNR value ──────────────────────────────────────────
+function snrClass(snr) {
+  if (snr >= 100) return 'good';
+  if (snr >= 20)  return 'warn';
+  return 'bad';
+}
+
+// ── Format exposure time nicely ──────────────────────────────────────────
+function fmtTime(s) {
+  if (s === null) return '> 3 h';
+  if (s < 1)    return (s * 1000).toFixed(0) + ' ms';
+  if (s < 60)   return s.toFixed(1) + ' s';
+  if (s < 3600) return (s / 60).toFixed(1) + ' min';
+  return (s / 3600).toFixed(2) + ' h';
+}
+
+// ── RV reference lines ───────────────────────────────────────────────────
+const RV_REFS = [
+  { snr: 200, label: '~1 m/s',  color: '#1b7f4f', dash: 'dot' },
+  { snr:  40, label: '~5 m/s',  color: '#c27d00', dash: 'dash' },
+  { snr:  10, label: '~30 m/s', color: '#c0392b', dash: 'dashdot' },
+];
+
+let plotsInitialized = false;
+
+// ── Main update function ─────────────────────────────────────────────────
+function update() {
+  const { cfg, exptime, frameRate, nSub, tMag } = getParams();
+
+  const magMin = cfg.photometry.mag_min;
+  const magMax = cfg.photometry.mag_max;
+  const mags   = linspace(magMin, magMax, 300);
+  const snrs   = mags.map(m => computeSNR(m, exptime, nSub, cfg).snr);
+
+  const times  = logspace(1, Math.log10(3 * 3600), 300);
+  const snrT   = times.map(t => computeSNR(tMag, t, nSub, cfg).snr);
+
+  // ── Point at target magnitude ──────────────────────────────────────────
+  const pt = computeSNR(tMag, exptime, nSub, cfg);
+
+  // ── Update computed sub-exposure display ────────────────────────────────
+  document.getElementById('nsub-computed').textContent = nSub.toLocaleString();
+
+  // ── Update summary cards ────────────────────────────────────────────
+  const snrRounded = Math.round(pt.snr * 10) / 10;
+  const snrEl = document.getElementById('card-snr');
+  snrEl.textContent = snrRounded > 0 ? snrRounded.toFixed(1) : '< 0.1';
+  snrEl.className = 'val ' + snrClass(pt.snr);
+
+  document.getElementById('card-mag-lbl').textContent = tMag.toFixed(1);
+  document.getElementById('card-nphot').textContent   = Math.round(pt.Ntot).toLocaleString();
+  document.getElementById('card-nsub').textContent    = nSub.toLocaleString();
+  document.getElementById('card-fr-lbl').textContent  = frameRate;
+
+  // e- per pixel per frame
+  const tSub = exptime / nSub;
+  const nPhotFrame = photonsPerResel(tMag, tSub, cfg);
+  const ePerPixFrame = nPhotFrame / cfg.detector.spatial_extent_pix;
+  const satLim = cfg.detector.saturation_e_per_pix_per_frame;
+  const epixEl = document.getElementById('card-epix');
+  epixEl.textContent = ePerPixFrame.toFixed(2);
+  epixEl.className = 'val ' + (ePerPixFrame > satLim ? 'bad' : ePerPixFrame > satLim * 0.5 ? 'warn' : 'good');
+  document.getElementById('card-epix-lbl').textContent =
+    ePerPixFrame > satLim ? `⚠ > ${satLim} e⁻ limit` : `limit ${satLim} e⁻`;
+
+  // ── Noise budget bar ─────────────────────────────────────────────────
+  const totVar  = pt.Ntot + pt.cicVar + pt.darkVar;
+  const shotPct = totVar > 0 ? (pt.Ntot    / totVar * 100) : 0;
+  const cicPct  = totVar > 0 ? (pt.cicVar  / totVar * 100) : 0;
+  const darkPct = totVar > 0 ? (pt.darkVar / totVar * 100) : 0;
+
+  document.getElementById('bar-stack').innerHTML =
+    `<div class="bar-seg bar-shot" style="width:${shotPct.toFixed(1)}%"></div>` +
+    `<div class="bar-seg bar-cic"  style="width:${cicPct.toFixed(1)}%"></div>` +
+    `<div class="bar-seg bar-dark" style="width:${darkPct.toFixed(1)}%"></div>`;
+
+  document.getElementById('b-shot').textContent  = shotPct.toFixed(1);
+  document.getElementById('b-cic').textContent   = cicPct.toFixed(1);
+  document.getElementById('b-dark').textContent  = darkPct.toFixed(1);
+  document.getElementById('nb-phot').textContent = pt.Ntot.toFixed(0);
+  document.getElementById('nb-cic-e').textContent = pt.cicVar.toFixed(2);
+  document.getElementById('nb-dark-e').textContent = pt.darkVar.toFixed(2);
+  document.getElementById('nsub-echo').textContent = nSub.toLocaleString();
+  document.getElementById('nb-spix').textContent   = cfg.detector.spatial_extent_pix;
+  document.getElementById('nb-label').textContent  =
+    `r = ${tMag.toFixed(1)}, t = ${fmtTime(exptime)}, ${nSub.toLocaleString()} sub-exposures @ ${frameRate} Hz`;
+
+  // ── Build Plotly traces ────────────────────────────────────────────────
+  const snrMagTrace = {
+    x: mags, y: snrs,
+    mode: 'lines',
+    name: `t = ${fmtTime(exptime)}, ${nSub.toLocaleString()} frames`,
+    line: { color: '#2e88c8', width: 2.5 },
+    hovertemplate: 'r = %{x:.2f}<br>SNR = %{y:.1f}<extra></extra>',
+  };
+
+  const targetTrace = {
+    x: [tMag], y: [pt.snr],
+    mode: 'markers',
+    name: `r = ${tMag.toFixed(1)}`,
+    marker: { color: '#c0392b', size: 10, symbol: 'star' },
+    hovertemplate: `r = ${tMag.toFixed(1)}<br>SNR = ${pt.snr.toFixed(1)}<extra>Target</extra>`,
+  };
+
+  const rvShapes = RV_REFS.map(rv => ({
+    type: 'line', x0: magMin, x1: magMax, y0: rv.snr, y1: rv.snr,
+    line: { color: rv.color, dash: rv.dash, width: 1.2 },
+  }));
+
+  const rvAnnotations = RV_REFS.map(rv => ({
+    x: magMax, y: rv.snr, xref: 'x', yref: 'y',
+    text: rv.label, showarrow: false, xanchor: 'right', yanchor: 'bottom',
+    font: { size: 10, color: rv.color },
+  }));
+
+  // Saturation magnitude: signal per pix per frame = satLim
+  // N_phot_per_resel(mag, tSub) / spatial_pix = satLim
+  // → mag_sat = -2.5*log10(satLim * spatial_pix / (photonsPerResel(0, tSub, cfg)))
+  const satMag = -2.5 * Math.log10(
+    satLim * cfg.detector.spatial_extent_pix / photonsPerResel(0, exptime / nSub, cfg)
+  );
+  const satShapes = (satMag >= magMin && satMag <= magMax) ? [{
+    type: 'line', x0: satMag, x1: satMag, y0: 0.05, y1: 1e4,
+    line: { color: '#c0392b', dash: 'dot', width: 1.5 },
+  }] : [];
+  const satAnnotation = (satMag >= magMin && satMag <= magMax) ? [{
+    x: satMag, y: Math.log10(1e4) * 0.92, xref: 'x', yref: 'y',
+    text: `${satLim} e⁻/pix/frame`, showarrow: false,
+    xanchor: 'left', font: { size: 10, color: '#c0392b' },
+  }] : [];
+
+  const layoutMag = {
+    title: { text: 'SNR vs r magnitude', font: { size: 13 }, x: 0.05, xanchor: 'left' },
+    xaxis: { title: 'r magnitude (SDSS)', range: [magMin, magMax] },
+    yaxis: { title: 'SNR per resolution element', type: 'log',
+             range: [Math.log10(0.05), Math.log10(1e4)] },
+    shapes: [...rvShapes, ...satShapes],
+    annotations: [...rvAnnotations, ...satAnnotation],
+    margin: { l: 60, r: 20, t: 44, b: 50 },
+    legend: { x: 0.02, y: 0.05, bgcolor: 'rgba(255,255,255,0.8)' },
+    hovermode: 'x unified',
+    paper_bgcolor: '#fff', plot_bgcolor: '#fafcff',
+  };
+
+  // ── SNR vs time plot ───────────────────────────────────────────────────
+  const snrTimeTrace = {
+    x: times, y: snrT,
+    mode: 'lines',
+    name: `r = ${tMag.toFixed(1)}`,
+    line: { color: '#e07b39', width: 2.5 },
+    hovertemplate: 't = %{x:.0f} s<br>SNR = %{y:.1f}<extra></extra>',
+  };
+
+  const curTimeTrace = {
+    x: [exptime], y: [pt.snr],
+    mode: 'markers',
+    name: `t = ${fmtTime(exptime)}`,
+    marker: { color: '#2e88c8', size: 10, symbol: 'diamond' },
+    hovertemplate: `t = ${fmtTime(exptime)}<br>SNR = ${pt.snr.toFixed(1)}<extra>Current</extra>`,
+  };
+
+  const rvShapesT = RV_REFS.map(rv => ({
+    type: 'line', x0: 10, x1: 3 * 3600, y0: rv.snr, y1: rv.snr,
+    line: { color: rv.color, dash: rv.dash, width: 1.2 },
+  }));
+
+  const rvAnnotT = RV_REFS.map(rv => ({
+    x: Math.log10(3 * 3600), y: Math.log10(rv.snr),
+    xref: 'x', yref: 'y', text: rv.label,
+    showarrow: false, xanchor: 'right', yanchor: 'bottom',
+    font: { size: 10, color: rv.color },
+  }));
+
+  // horizontal line at SNR=100 as a fixed reference marker
+  const tsnrShape = [{
+    type: 'line', x0: 10, x1: 3 * 3600, y0: 100, y1: 100,
+    line: { color: '#555', dash: 'dot', width: 1 },
+  }];
+  const tsnrAnnot = [{
+    x: Math.log10(3 * 3600), y: Math.log10(100),
+    xref: 'x', yref: 'y', text: 'SNR=100',
+    showarrow: false, xanchor: 'right', yanchor: 'bottom',
+    font: { size: 10, color: '#555' },
+  }];
+
+  const layoutTime = {
+    title: { text: `SNR vs exposure time &nbsp;(r = ${tMag.toFixed(1)})`,
+             font: { size: 13 }, x: 0.05, xanchor: 'left' },
+    xaxis: { title: 'Exposure time (s)', type: 'log',
+             tickvals: [30, 60, 300, 600, 1800, 3600, 10800],
+             ticktext: ['30 s', '1 min', '5 min', '10 min', '30 min', '1 h', '3 h'] },
+    yaxis: { title: 'SNR per resolution element', type: 'log',
+             range: [Math.log10(0.05), Math.log10(1e4)] },
+    shapes: [...rvShapesT, ...tsnrShape],
+    annotations: [...rvAnnotT, ...tsnrAnnot],
+    margin: { l: 60, r: 20, t: 44, b: 50 },
+    legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(255,255,255,0.8)' },
+    hovermode: 'x unified',
+    paper_bgcolor: '#fff', plot_bgcolor: '#fafcff',
+  };
+
+  // ── e⁻/pix/frame vs magnitude plot ───────────────────────────────────────
+  // tSub / satLim / ePerPixFrame already declared above in summary cards block
+  const epixVsMag = mags.map(m => photonsPerResel(m, tSub, cfg) / cfg.detector.spatial_extent_pix);
+
+  const epixTrace = {
+    x: mags, y: epixVsMag,
+    mode: 'lines',
+    name: `${fmtTime(tSub)}/frame`,
+    line: { color: '#7b5ea7', width: 2.5 },
+    hovertemplate: 'r = %{x:.2f}<br>%{y:.3f} e⁻/pix/frame<extra></extra>',
+  };
+
+  const epixTargetTrace = {
+    x: [tMag], y: [ePerPixFrame],
+    mode: 'markers',
+    name: `r = ${tMag.toFixed(1)}`,
+    marker: { color: '#c0392b', size: 10, symbol: 'star' },
+    hovertemplate: `${ePerPixFrame.toFixed(3)} e⁻/pix/frame<extra>Target</extra>`,
+  };
+
+  const epixTraces = [epixTrace, epixTargetTrace];
+
+  const layoutEpix = {
+    title: { text: `e⁻ / pixel / frame &nbsp;(t<sub>frame</sub> = ${fmtTime(tSub)}, ${nSub.toLocaleString()} frames)`,
+             font: { size: 13 }, x: 0.05, xanchor: 'left' },
+    xaxis: { title: 'r magnitude (SDSS)', range: [magMin, magMax] },
+    yaxis: { title: 'e⁻ / pixel / frame', type: 'log' },
+    shapes: [{
+      type: 'line', x0: magMin, x1: magMax,
+      y0: satLim, y1: satLim,
+      line: { color: '#c0392b', dash: 'dot', width: 1.5 },
+    }],
+    annotations: [{
+      x: magMax, y: Math.log10(satLim), xref: 'x', yref: 'y',
+      text: `${satLim} e⁻ limit`, showarrow: false,
+      xanchor: 'right', yanchor: 'bottom',
+      font: { size: 10, color: '#c0392b' },
+    }],
+    margin: { l: 60, r: 20, t: 44, b: 50 },
+    legend: { x: 0.98, y: 0.98, xanchor: 'right', bgcolor: 'rgba(255,255,255,0.8)' },
+    hovermode: 'x unified',
+    paper_bgcolor: '#fff', plot_bgcolor: '#fafcff',
+  };
+
+  if (!plotsInitialized) {
+    Plotly.newPlot('plot-snr-mag',  [snrMagTrace, targetTrace], layoutMag,
+                   { responsive: true, displayModeBar: false });
+    Plotly.newPlot('plot-snr-time', [snrTimeTrace, curTimeTrace], layoutTime,
+                   { responsive: true, displayModeBar: false });
+    Plotly.newPlot('plot-epix-mag', epixTraces, layoutEpix,
+                   { responsive: true, displayModeBar: false });
+    plotsInitialized = true;
+  } else {
+    Plotly.react('plot-snr-mag',  [snrMagTrace, targetTrace], layoutMag);
+    Plotly.react('plot-snr-time', [snrTimeTrace, curTimeTrace], layoutTime);
+    Plotly.react('plot-epix-mag', epixTraces, layoutEpix);
+  }
+}
+
+// ── Advanced panel toggle ────────────────────────────────────────────────
+function toggleAdv() {
+  const sec = document.getElementById('adv-section');
+  const btn = document.getElementById('adv-toggle');
+  sec.classList.toggle('open');
+  btn.textContent = sec.classList.contains('open')
+    ? '▼ Advanced parameters' : '▶ Advanced parameters';
+}
+
+function resetAdvanced() {
+  document.getElementById('eff-val').value     = '10';
+  document.getElementById('spatial-val').value = CFG.detector.spatial_extent_pix;
+  document.getElementById('dark-val').value    = CFG.detector.dark_current_e_per_s_per_pix;
+  document.getElementById('cic-val').value     = CFG.detector.clock_induced_charges_e_per_pix;
+  update();
+}
+
+// ── Wire up all inputs ───────────────────────────────────────────────────
+function init() {
+  linkLogSliderNumber('exptime-slider', 'exptime-val', update);
+  linkSliderNumber('tmag-slider',    'tmag-val',    update);
+
+  // Link frame-rate ↔ frame-time
+  document.getElementById('framerate-val').addEventListener('change', function() {
+    const hz = parseFloat(this.value);
+    if (hz > 0) document.getElementById('frametime-val').value = parseFloat((1/hz).toPrecision(4));
+    update();
+  });
+  document.getElementById('frametime-val').addEventListener('change', function() {
+    const ts = parseFloat(this.value);
+    if (ts > 0) document.getElementById('framerate-val').value = parseFloat((1/ts).toPrecision(4));
+    update();
+  });
+
+  ['eff-val', 'spatial-val', 'dark-val', 'cic-val'].forEach(id => {
+    document.getElementById(id).addEventListener('change', update);
+  });
+
+  // Populate static labels from config
+  document.getElementById('lbl-telescope').textContent = CFG.telescope.name;
+  document.getElementById('lbl-wave').textContent = CFG.instrument.central_wavelength_a;
+  document.getElementById('lbl-res').textContent  =
+    CFG.instrument.resolution.toLocaleString();
+
+  update();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
