@@ -317,6 +317,9 @@
       <div class="plot-box" style="grid-column: span 2">
         <div id="plot-epix-mag" style="height:280px"></div>
       </div>
+      <div class="plot-box" style="grid-column: span 2">
+        <div id="plot-noise-frac-mag" style="height:280px"></div>
+      </div>
     </div>
 
     <!-- Noise budget -->
@@ -674,6 +677,59 @@ function update() {
     paper_bgcolor: '#fff', plot_bgcolor: '#fafcff',
   };
 
+  // ── Noise fraction vs magnitude plot ───────────────────────────────────
+  const shotFracMag = [];
+  const cicFracMag = [];
+  const darkFracMag = [];
+  for (const m of mags) {
+    const q = computeSNR(m, exptime, nSub, cfg);
+    const vTot = q.Ntot + q.cicVar + q.darkVar;
+    if (vTot > 0) {
+      shotFracMag.push(100 * q.Ntot / vTot);
+      cicFracMag.push(100 * q.cicVar / vTot);
+      darkFracMag.push(100 * q.darkVar / vTot);
+    } else {
+      shotFracMag.push(0);
+      cicFracMag.push(0);
+      darkFracMag.push(0);
+    }
+  }
+
+  const noiseFracTraces = [
+    {
+      x: mags, y: shotFracMag,
+      mode: 'lines',
+      name: 'Shot',
+      line: { color: '#2e88c8', width: 2.2 },
+      hovertemplate: 'r = %{x:.2f}<br>Shot = %{y:.1f}%<extra></extra>',
+    },
+    {
+      x: mags, y: cicFracMag,
+      mode: 'lines',
+      name: 'CIC',
+      line: { color: '#e07b39', width: 2.2 },
+      hovertemplate: 'r = %{x:.2f}<br>CIC = %{y:.1f}%<extra></extra>',
+    },
+    {
+      x: mags, y: darkFracMag,
+      mode: 'lines',
+      name: 'Dark',
+      line: { color: '#7b5ea7', width: 2.2 },
+      hovertemplate: 'r = %{x:.2f}<br>Dark = %{y:.1f}%<extra></extra>',
+    },
+  ];
+
+  const layoutNoiseFrac = {
+    title: { text: `Noise contribution fractions vs r magnitude &nbsp;(t = ${fmtTime(exptime)}, ${nSub.toLocaleString()} frames)`,
+             font: { size: 13 }, x: 0.05, xanchor: 'left' },
+    xaxis: { title: 'r magnitude (SDSS)', range: [magMin, magMax] },
+    yaxis: { title: 'Variance fraction (%)', range: [0, 100] },
+    margin: { l: 60, r: 20, t: 44, b: 50 },
+    legend: { x: 0.98, y: 0.98, xanchor: 'right', bgcolor: 'rgba(255,255,255,0.8)' },
+    hovermode: 'x unified',
+    paper_bgcolor: '#fff', plot_bgcolor: '#fafcff',
+  };
+
   if (!plotsInitialized) {
     Plotly.newPlot('plot-snr-mag',  [snrMagTrace, targetTrace], layoutMag,
                    { responsive: true, displayModeBar: false });
@@ -681,11 +737,14 @@ function update() {
                    { responsive: true, displayModeBar: false });
     Plotly.newPlot('plot-epix-mag', epixTraces, layoutEpix,
                    { responsive: true, displayModeBar: false });
+    Plotly.newPlot('plot-noise-frac-mag', noiseFracTraces, layoutNoiseFrac,
+                   { responsive: true, displayModeBar: false });
     plotsInitialized = true;
   } else {
     Plotly.react('plot-snr-mag',  [snrMagTrace, targetTrace], layoutMag);
     Plotly.react('plot-snr-time', [snrTimeTrace, curTimeTrace], layoutTime);
     Plotly.react('plot-epix-mag', epixTraces, layoutEpix);
+    Plotly.react('plot-noise-frac-mag', noiseFracTraces, layoutNoiseFrac);
   }
 }
 
