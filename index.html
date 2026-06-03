@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>VROOMM ETC — OMM 1.6-m</title>
 
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"/>
   <!-- Bootstrap 5 -->
   <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -14,37 +19,61 @@
 
   <style>
     :root {
-      --omm-blue:    #1a3a5c;
+      --omm-blue:    #0f2d4a;
+      --omm-blue2:   #1a3a5c;
       --omm-accent:  #2e88c8;
-      --bg-light:    #f4f7fb;
-      --border-col:  #d0d9e6;
+      --omm-accent2: #1a6fa8;
+      --bg-light:    #eef2f8;
+      --border-col:  #cdd6e4;
+      --shadow-sm:   0 1px 4px rgba(15,45,74,.08);
+      --shadow-md:   0 3px 12px rgba(15,45,74,.12);
+      --radius:      12px;
     }
+
+    *, *::before, *::after { box-sizing: border-box; }
 
     body {
       background: var(--bg-light);
-      font-family: "Helvetica Neue", Arial, sans-serif;
+      font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
       color: #1a1a2e;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* ── Header ───────────────────────────────────────────────────── */
     header {
-      background: var(--omm-blue);
+      background: linear-gradient(135deg, var(--omm-blue) 0%, #1e5080 100%);
       color: #fff;
-      padding: 18px 32px 14px;
+      padding: 16px 32px 14px;
       display: flex;
-      align-items: baseline;
+      align-items: center;
       gap: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+      position: relative;
+      overflow: hidden;
     }
-    header h1 { font-size: 1.55rem; font-weight: 700; margin: 0; letter-spacing: .03em; }
-    header p  { font-size: .85rem; opacity: .75; margin: 0; }
+    header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 18px,
+        rgba(255,255,255,.025) 18px,
+        rgba(255,255,255,.025) 36px
+      );
+      pointer-events: none;
+    }
+    header h1 { font-size: 1.35rem; font-weight: 700; margin: 0; letter-spacing: .01em; }
+    header p  { font-size: .83rem; opacity: .7; margin: 0; }
 
     /* ── Layout ──────────────────────────────────────────────────── */
     #layout {
       display: grid;
       grid-template-columns: 300px 1fr;
       gap: 20px;
-      padding: 20px 24px;
-      max-width: 1400px;
+      padding: 22px 28px;
+      max-width: 1440px;
       margin: 0 auto;
     }
 
@@ -52,21 +81,22 @@
     #controls {
       background: #fff;
       border: 1px solid var(--border-col);
-      border-radius: 10px;
+      border-radius: var(--radius);
       padding: 18px 16px;
       height: fit-content;
       position: sticky;
       top: 16px;
+      box-shadow: var(--shadow-md);
     }
     #controls h5 {
-      font-size: .80rem;
+      font-size: .70rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--omm-accent);
-      margin: 18px 0 8px;
-      border-bottom: 1px solid var(--border-col);
-      padding-bottom: 4px;
+      letter-spacing: .10em;
+      color: var(--omm-accent2);
+      margin: 20px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #e8eef6;
     }
     #controls h5:first-child { margin-top: 0; }
 
@@ -78,107 +108,165 @@
       gap: 6px;
     }
     .param-row label {
-      font-size: .82rem;
-      color: #444;
+      font-size: .80rem;
+      font-weight: 500;
+      color: #4a5568;
       min-width: 0;
       flex: 1;
     }
-    .param-row input[type="range"] { flex: 1.2; min-width: 0; accent-color: var(--omm-accent); }
+    .param-row input[type="range"] {
+      flex: 1.2; min-width: 0;
+      accent-color: var(--omm-accent);
+      cursor: pointer;
+    }
     .param-row input[type="number"],
     .param-row input[type="text"]  {
-      width: 78px;
+      width: 80px;
       font-size: .82rem;
-      border: 1px solid var(--border-col);
-      border-radius: 5px;
-      padding: 3px 6px;
+      font-family: inherit;
+      border: 1.5px solid var(--border-col);
+      border-radius: 6px;
+      padding: 4px 7px;
+      transition: border-color .15s;
+      outline: none;
+    }
+    #adv-section .param-row input[type="number"] { width: 92px; }
+    .param-row input[type="number"]:focus,
+    .param-row input[type="text"]:focus {
+      border-color: var(--omm-accent);
+      box-shadow: 0 0 0 3px rgba(46,136,200,.15);
     }
 
-    .badge-snr {
-      font-size: .75rem;
-      padding: 2px 6px;
-      border-radius: 4px;
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: .80rem;
+      color: #5a6a7e;
+      margin-bottom: 7px;
+      padding: 4px 0;
     }
+    .info-row strong { color: #1a3a5c; font-weight: 600; }
 
     /* ── Summary cards ───────────────────────────────────────────── */
     #summary {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 14px;
+      margin-bottom: 18px;
     }
     .card-stat {
       background: #fff;
       border: 1px solid var(--border-col);
-      border-radius: 10px;
-      padding: 14px 16px;
+      border-radius: var(--radius);
+      padding: 16px 14px 14px;
       text-align: center;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .card-stat:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
     }
     .card-stat .val {
-      font-size: 1.7rem;
+      font-size: 1.75rem;
       font-weight: 700;
-      color: var(--omm-blue);
+      color: var(--omm-blue2);
       line-height: 1.1;
+      letter-spacing: -.02em;
     }
     .card-stat .val.good  { color: #1b7f4f; }
     .card-stat .val.warn  { color: #c27d00; }
     .card-stat .val.bad   { color: #c0392b; }
     .card-stat .lbl {
-      font-size: .78rem;
-      color: #666;
-      margin-top: 4px;
+      font-size: .74rem;
+      font-weight: 500;
+      color: #8a9ab0;
+      margin-top: 5px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
     }
 
     /* ── Plots ───────────────────────────────────────────────────── */
     #plots {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 16px;
+      gap: 16px;
+      margin-bottom: 18px;
     }
     .plot-box {
       background: #fff;
       border: 1px solid var(--border-col);
-      border-radius: 10px;
+      border-radius: var(--radius);
       padding: 8px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow .2s;
     }
+    .plot-box:hover { box-shadow: var(--shadow-md); }
 
     /* ── Noise budget ────────────────────────────────────────────── */
     #noise-box {
       background: #fff;
       border: 1px solid var(--border-col);
-      border-radius: 10px;
-      padding: 14px 18px;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
     }
     #noise-box h6 {
-      font-size: .78rem;
+      font-size: .70rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--omm-accent);
-      margin-bottom: 10px;
+      letter-spacing: .10em;
+      color: var(--omm-accent2);
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #e8eef6;
     }
     .bar-stack {
-      height: 22px;
-      border-radius: 4px;
+      height: 24px;
+      border-radius: 6px;
       overflow: hidden;
       display: flex;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,.08);
     }
-    .bar-seg { height: 100%; transition: width .35s; }
-    .bar-shot  { background: #2e88c8; }
-    .bar-cic   { background: #e07b39; }
-    .bar-dark  { background: #7b5ea7; }
+    .bar-seg { height: 100%; transition: width .4s cubic-bezier(.4,0,.2,1); }
+    .bar-shot  { background: linear-gradient(90deg, #2e88c8, #4aa3e0); }
+    .bar-cic   { background: linear-gradient(90deg, #e07b39, #f09254); }
+    .bar-dark  { background: linear-gradient(90deg, #7b5ea7, #9878c4); }
     .noise-legend {
-      display: flex; gap: 16px; margin-top: 8px;
-      font-size: .78rem; color: #555;
+      display: flex; gap: 18px; margin-top: 10px;
+      font-size: .78rem; color: #5a6a7e; font-weight: 500;
     }
-    .leg-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+    .leg-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; }
 
     .spinner-border { width: 1rem; height: 1rem; }
 
     /* ── Advanced toggle ─────────────────────────────────────────── */
-    #adv-toggle { cursor: pointer; font-size: .78rem; color: var(--omm-accent); text-decoration: underline; }
+    #adv-toggle {
+      cursor: pointer;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--omm-accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 0;
+      border: none;
+      background: none;
+      transition: color .15s;
+    }
+    #adv-toggle:hover { color: var(--omm-accent2); }
     #adv-section { display: none; }
     #adv-section.open { display: block; }
+
+    /* ── Footer ──────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 18px;
+      font-size: .74rem;
+      color: #8a9ab0;
+      letter-spacing: .02em;
+    }
   </style>
 </head>
 
@@ -187,7 +275,8 @@
 <header>
   <div style="display:flex;align-items:center;gap:1.2rem">
     <img src="static/logo.png" alt="VROOMM logo"
-         style="height:52px;width:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.25))"/>
+         style="height:52px;width:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.25))"
+         onerror="this.style.display='none'"/>
     <div>
       <h1 style="margin:0;font-size:1.35rem;line-height:1.15">Exposure Time Calculator</h1>
       <p style="margin:0">OMM 1.6-m telescope &nbsp;·&nbsp; SDSS <em>r</em> band &nbsp;·&nbsp; SNR per resolution element</p>
@@ -207,21 +296,21 @@
       <input type="range" id="exptime-slider"
              min="0" max="1000" step="1" value="718"/>
       <input type="number" id="exptime-val"
-             min="1" max="10800" step="1" value="1800" style="width:72px"/>
+             min="1" max="10800" step="1" value="1800"/>
     </div>
 
     <div class="param-row">
       <label for="framerate-val">Frame rate (Hz)</label>
       <input type="number" id="framerate-val"
-             min="0.001" max="100" step="0.5" value="4" style="width:72px; margin-left:auto"/>
+             min="0.001" max="100" step="0.5" value="4" style="margin-left:auto"/>
     </div>
     <div class="param-row">
       <label for="frametime-val">Time / frame (s)</label>
       <input type="number" id="frametime-val"
-             min="0.01" max="1000" step="0.01" value="0.25" style="width:72px; margin-left:auto"/>
+             min="0.01" max="1000" step="0.01" value="0.25" style="margin-left:auto"/>
     </div>
-    <div class="param-row" style="color:#777;font-size:.78rem">
-      <span>Sub-exposures:</span>
+    <div class="info-row">
+      <span>Sub-exposures</span>
       <strong id="nsub-computed">7200</strong>
     </div>
 
@@ -232,50 +321,50 @@
       <input type="range" id="tmag-slider"
              min="5" max="20" step="0.5" value="14"/>
       <input type="number" id="tmag-val"
-             min="5" max="20" step="0.5" value="14" style="width:72px"/>
+             min="5" max="20" step="0.5" value="14"/>
     </div>
 
 
 
     <h5>Instrument</h5>
 
-    <div class="param-row">
-      <label>Telescope</label>
-      <span style="font-size:.82rem;color:#444" id="lbl-telescope">OMM 1.6-m</span>
+    <div class="info-row">
+      <span>Telescope</span>
+      <strong id="lbl-telescope">OMM 1.6-m</strong>
     </div>
-    <div class="param-row">
-      <label>λ₀ (Å)</label>
-      <span style="font-size:.82rem;color:#444" id="lbl-wave">6204.29</span>
+    <div class="info-row">
+      <span>λ₀ (Å)</span>
+      <strong id="lbl-wave">6204.29</strong>
     </div>
-    <div class="param-row">
-      <label>Resolution</label>
-      <span style="font-size:.82rem;color:#444" id="lbl-res">120 000</span>
+    <div class="info-row">
+      <span>Resolution</span>
+      <strong id="lbl-res">120 000</strong>
     </div>
 
-    <div style="margin-top:8px">
-      <span id="adv-toggle" onclick="toggleAdv()">&#9654; Advanced parameters</span>
+    <div style="margin-top:10px;padding-top:6px;border-top:1px solid #e8eef6">
+      <button id="adv-toggle" onclick="toggleAdv()">&#9654; Advanced parameters</button>
     </div>
 
     <div id="adv-section">
       <div class="param-row" style="margin-top:10px">
         <label for="eff-val">Efficiency (%)</label>
         <input type="number" id="eff-val"
-               min="1" max="100" step="0.5" value="10" style="width:72px"/>
+               min="1" max="100" step="0.5" value="10"/>
       </div>
       <div class="param-row">
         <label for="spatial-val">Spatial pix</label>
         <input type="number" id="spatial-val"
-               min="1" max="50" step="1" value="8" style="width:72px"/>
+               min="1" max="50" step="1" value="8"/>
       </div>
       <div class="param-row">
         <label for="dark-val">Dark (e⁻/s/pix)</label>
         <input type="number" id="dark-val"
-               min="0" max="1" step="0.00001" value="0.00016" style="width:88px"/>
+               min="0" max="1" step="0.00001" value="0.00016"/>
       </div>
       <div class="param-row">
         <label for="cic-val">CIC (e⁻/pix/read)</label>
         <input type="number" id="cic-val"
-               min="0" max="1" step="0.0001" value="0.001" style="width:88px"/>
+               min="0" max="1" step="0.0001" value="0.001"/>
       </div>
       <button class="btn btn-sm btn-outline-secondary mt-2 w-100"
               onclick="resetAdvanced()">Reset to defaults</button>
@@ -324,7 +413,8 @@
 
     <!-- Noise budget -->
     <div id="noise-box">
-      <h6>Noise budget at selected target &nbsp;<span id="nb-label" style="font-weight:normal;text-transform:none;letter-spacing:0;color:#333"></span></h6>
+      <h6>Noise budget</h6>
+      <p id="nb-label" style="font-size:.80rem;color:#5a6a7e;margin:-10px 0 12px;"></p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:center">
         <div>
           <div class="bar-stack" id="bar-stack"></div>
@@ -334,16 +424,18 @@
             <span><span class="leg-dot" style="background:#7b5ea7"></span>Dark (<span id="b-dark">—</span>%)</span>
           </div>
         </div>
-        <div style="font-size:.83rem; color:#444; line-height:1.7">
-          Signal photons: <strong id="nb-phot">—</strong><br/>
-          CIC electrons&nbsp;: <strong id="nb-cic-e">—</strong> &nbsp;(<span id="nsub-echo">1</span> readout×<span id="nb-spix">8</span> pix × 0.001)<br/>
-          Dark electrons : <strong id="nb-dark-e">—</strong>
+        <div style="font-size:.82rem; color:#5a6a7e; line-height:1.9; font-weight:500">
+          Signal photons: <strong style="color:#1a3a5c" id="nb-phot">—</strong><br/>
+          CIC electrons&nbsp;&nbsp;: <strong style="color:#1a3a5c" id="nb-cic-e">—</strong> &nbsp;<span style="font-weight:400;color:#8a9ab0">(<span id="nsub-echo">1</span> reads × <span id="nb-spix">8</span> pix × 0.001)</span><br/>
+          Dark electrons : <strong style="color:#1a3a5c" id="nb-dark-e">—</strong>
         </div>
       </div>
     </div>
 
   </main>
 </div>
+
+<footer>VROOMM &nbsp;·&nbsp; OMM 1.6-m &nbsp;·&nbsp; Exposure Time Calculator</footer>
 
 <!-- ───────────────────────── JavaScript ──────────────────────────────── -->
 <script>
@@ -450,9 +542,11 @@ function fmtTime(s) {
 
 // ── RV reference lines ───────────────────────────────────────────────────
 const RV_REFS = [
-  { snr: 200, label: '~1 m/s',  color: '#1b7f4f', dash: 'dot' },
-  { snr:  40, label: '~5 m/s',  color: '#c27d00', dash: 'dash' },
-  { snr:  10, label: '~30 m/s', color: '#c0392b', dash: 'dashdot' },
+  { snr: 200, label: '~1 m/s',   color: '#1b7f4f', dash: 'dot' },
+  { snr:  40, label: '~5 m/s',   color: '#c27d00', dash: 'dash' },
+  { snr:  10, label: '~30 m/s',  color: '#c0392b', dash: 'dashdot' },
+  { snr:   2, label: '~100 m/s', color: '#8b3a3a', dash: 'longdash' },
+  { snr:   1, label: '~200 m/s', color: '#5a2d82', dash: 'longdashdot' },
 ];
 
 let plotsInitialized = false;
@@ -565,6 +659,7 @@ function update() {
 
   const layoutMag = {
     title: { text: 'SNR vs r magnitude', font: { size: 13 }, x: 0.05, xanchor: 'left' },
+    font: { family: 'Inter, Helvetica Neue, Arial, sans-serif', size: 12 },
     xaxis: { title: 'r magnitude (SDSS)', range: [magMin, magMax] },
     yaxis: { title: 'SNR per resolution element', type: 'log',
              range: [Math.log10(0.05), Math.log10(1e4)] },
@@ -573,7 +668,7 @@ function update() {
     margin: { l: 60, r: 20, t: 44, b: 50 },
     legend: { x: 0.02, y: 0.05, bgcolor: 'rgba(255,255,255,0.8)' },
     hovermode: 'x unified',
-    paper_bgcolor: '#fff', plot_bgcolor: '#fafcff',
+    paper_bgcolor: '#fff', plot_bgcolor: '#f8faff',
   };
 
   // ── SNR vs time plot ───────────────────────────────────────────────────
@@ -620,6 +715,7 @@ function update() {
   const layoutTime = {
     title: { text: `SNR vs exposure time &nbsp;(r = ${tMag.toFixed(1)})`,
              font: { size: 13 }, x: 0.05, xanchor: 'left' },
+    font: { family: 'Inter, Helvetica Neue, Arial, sans-serif', size: 12 },
     xaxis: { title: 'Exposure time (s)', type: 'log',
              tickvals: [30, 60, 300, 600, 1800, 3600, 10800],
              ticktext: ['30 s', '1 min', '5 min', '10 min', '30 min', '1 h', '3 h'] },
@@ -630,7 +726,7 @@ function update() {
     margin: { l: 60, r: 20, t: 44, b: 50 },
     legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(255,255,255,0.8)' },
     hovermode: 'x unified',
-    paper_bgcolor: '#fff', plot_bgcolor: '#fafcff',
+    paper_bgcolor: '#fff', plot_bgcolor: '#f8faff',
   };
 
   // ── e⁻/pix/frame vs magnitude plot ───────────────────────────────────────
@@ -658,6 +754,7 @@ function update() {
   const layoutEpix = {
     title: { text: `e⁻ / pixel / frame &nbsp;(t<sub>frame</sub> = ${fmtTime(tSub)}, ${nSub.toLocaleString()} frames)`,
              font: { size: 13 }, x: 0.05, xanchor: 'left' },
+    font: { family: 'Inter, Helvetica Neue, Arial, sans-serif', size: 12 },
     xaxis: { title: 'r magnitude (SDSS)', range: [magMin, magMax] },
     yaxis: { title: 'e⁻ / pixel / frame', type: 'log' },
     shapes: [{
@@ -674,7 +771,7 @@ function update() {
     margin: { l: 60, r: 20, t: 44, b: 50 },
     legend: { x: 0.98, y: 0.98, xanchor: 'right', bgcolor: 'rgba(255,255,255,0.8)' },
     hovermode: 'x unified',
-    paper_bgcolor: '#fff', plot_bgcolor: '#fafcff',
+    paper_bgcolor: '#fff', plot_bgcolor: '#f8faff',
   };
 
   // ── Noise fraction vs magnitude plot ───────────────────────────────────
@@ -722,12 +819,13 @@ function update() {
   const layoutNoiseFrac = {
     title: { text: `Noise contribution fractions vs r magnitude &nbsp;(t = ${fmtTime(exptime)}, ${nSub.toLocaleString()} frames)`,
              font: { size: 13 }, x: 0.05, xanchor: 'left' },
+    font: { family: 'Inter, Helvetica Neue, Arial, sans-serif', size: 12 },
     xaxis: { title: 'r magnitude (SDSS)', range: [magMin, magMax] },
     yaxis: { title: 'Variance fraction (%)', range: [0, 100] },
     margin: { l: 60, r: 20, t: 44, b: 50 },
     legend: { x: 0.98, y: 0.98, xanchor: 'right', bgcolor: 'rgba(255,255,255,0.8)' },
     hovermode: 'x unified',
-    paper_bgcolor: '#fff', plot_bgcolor: '#fafcff',
+    paper_bgcolor: '#fff', plot_bgcolor: '#f8faff',
   };
 
   if (!plotsInitialized) {
