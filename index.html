@@ -151,7 +151,7 @@
     /* ── Summary cards ───────────────────────────────────────────── */
     #summary {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -159,17 +159,29 @@
       background: #fff;
       border: 1px solid var(--border-col);
       border-radius: var(--radius);
-      padding: 16px 14px 14px;
+      padding: 14px 12px 12px;
       text-align: center;
       box-shadow: var(--shadow-sm);
       transition: box-shadow .2s, transform .2s;
     }
     .card-stat:hover {
       box-shadow: var(--shadow-md);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
     }
+    .card-icon {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 8px;
+    }
+    .card-icon svg { width: 18px; height: 18px; }
+    .card-icon.blue   { background: #e6f2fb; color: #2e88c8; }
+    .card-icon.green  { background: #e4f2ec; color: #1b7f4f; }
+    .card-icon.purple { background: #ede8f7; color: #7b5ea7; }
+    .card-icon.orange { background: #fdf0e6; color: #e07b39; }
+    .card-icon.teal   { background: #e2f5f3; color: #1a9080; }
     .card-stat .val {
-      font-size: 1.75rem;
+      font-size: 1.65rem;
       font-weight: 700;
       color: var(--omm-blue2);
       line-height: 1.1;
@@ -179,10 +191,10 @@
     .card-stat .val.warn  { color: #c27d00; }
     .card-stat .val.bad   { color: #c0392b; }
     .card-stat .lbl {
-      font-size: .74rem;
+      font-size: .72rem;
       font-weight: 500;
       color: #8a9ab0;
-      margin-top: 5px;
+      margin-top: 4px;
       text-transform: uppercase;
       letter-spacing: .04em;
     }
@@ -233,11 +245,61 @@
     .bar-shot  { background: linear-gradient(90deg, #2e88c8, #4aa3e0); }
     .bar-cic   { background: linear-gradient(90deg, #e07b39, #f09254); }
     .bar-dark  { background: linear-gradient(90deg, #7b5ea7, #9878c4); }
+    .bar-sky   { background: linear-gradient(90deg, #1a9080, #2ab5a3); }
     .noise-legend {
-      display: flex; gap: 18px; margin-top: 10px;
+      display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap;
       font-size: .78rem; color: #5a6a7e; font-weight: 500;
     }
     .leg-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; }
+
+    /* ── Magnitude table ─────────────────────────────────────────── */
+    #mag-table-box {
+      background: #fff;
+      border: 1px solid var(--border-col);
+      border-radius: var(--radius);
+      padding: 16px 20px 12px;
+      box-shadow: var(--shadow-sm);
+      margin-top: 16px;
+    }
+    #mag-table-box h6 {
+      font-size: .70rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      color: var(--omm-accent2);
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #e8eef6;
+    }
+    #mag-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .81rem;
+    }
+    #mag-table th {
+      background: #f0f5ff;
+      color: #1a3a5c;
+      font-weight: 600;
+      padding: 6px 12px;
+      text-align: right;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    #mag-table th:first-child { text-align: left; border-radius: 6px 0 0 6px; }
+    #mag-table th:last-child  { border-radius: 0 6px 6px 0; }
+    #mag-table td {
+      padding: 5px 12px;
+      text-align: right;
+      border-bottom: 1px solid #eef2f8;
+      color: #2a3a4e;
+    }
+    #mag-table td:first-child { text-align: left; font-weight: 500; }
+    #mag-table tr:last-child td { border-bottom: none; }
+    #mag-table tr.row-target { background: #f5f8ff; }
+    #mag-table tr.row-target td { font-weight: 600; }
+    .snr-good { color: #1b7f4f; font-weight: 600; }
+    .snr-warn { color: #c27d00; font-weight: 600; }
+    .snr-bad  { color: #c0392b; font-weight: 600; }
 
     .spinner-border { width: 1rem; height: 1rem; }
 
@@ -341,6 +403,18 @@
       <strong id="lbl-res">120 000</strong>
     </div>
 
+    <h5>Exposure planning</h5>
+
+    <div class="param-row">
+      <label for="target-snr-val">Target SNR</label>
+      <input type="number" id="target-snr-val"
+             min="1" max="2000" step="1" value="100" style="margin-left:auto"/>
+    </div>
+    <div class="info-row">
+      <span>Time required</span>
+      <strong id="t-req-display" style="color:var(--omm-blue2)">—</strong>
+    </div>
+
     <div style="margin-top:10px;padding-top:6px;border-top:1px solid #e8eef6">
       <button id="adv-toggle" onclick="toggleAdv()">&#9654; Advanced parameters</button>
     </div>
@@ -366,6 +440,16 @@
         <input type="number" id="cic-val"
                min="0" max="1" step="0.0001" value="0.001"/>
       </div>
+      <div class="param-row">
+        <label for="sky-val">Sky (mag/arcsec²)</label>
+        <input type="number" id="sky-val"
+               min="15" max="25" step="0.5" value="21.0"/>
+      </div>
+      <div class="param-row">
+        <label for="fiber-val">Fiber diam (arcsec)</label>
+        <input type="number" id="fiber-val"
+               min="0.5" max="10" step="0.5" value="2.0"/>
+      </div>
       <button class="btn btn-sm btn-outline-secondary mt-2 w-100"
               onclick="resetAdvanced()">Reset to defaults</button>
     </div>
@@ -378,20 +462,54 @@
     <!-- Summary cards -->
     <div id="summary">
       <div class="card-stat">
+        <div class="card-icon blue">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+            <path d="M9 1.5l1.9 4.8 5.1.4-3.9 3.4 1.2 5-4.3-2.6-4.3 2.6 1.2-5L1.9 6.7l5.1-.4z"/>
+          </svg>
+        </div>
         <div class="val" id="card-snr">—</div>
         <div class="lbl">SNR at r = <span id="card-mag-lbl">14</span></div>
       </div>
       <div class="card-stat">
+        <div class="card-icon green">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7">
+            <circle cx="9" cy="9" r="3"/>
+            <path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.7 3.7l1.4 1.4M12.9 12.9l1.4 1.4M3.7 14.3l1.4-1.4M12.9 5.1l1.4-1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
         <div class="val" id="card-nphot">—</div>
         <div class="lbl">Signal photons / resel</div>
       </div>
       <div class="card-stat">
+        <div class="card-icon purple">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+            <rect x="2" y="7" width="14" height="4" rx="1.2"/>
+            <path d="M5 7V4.5M9 7V4M13 7V5M5 11v2.5M9 11v3M13 11v2"/>
+          </svg>
+        </div>
         <div class="val" id="card-nsub">—</div>
         <div class="lbl">Sub-exposures (<span id="card-fr-lbl">4</span> Hz)</div>
       </div>
       <div class="card-stat">
+        <div class="card-icon orange">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+            <rect x="5" y="5" width="8" height="8" rx="1.5"/>
+            <path d="M7 2v3M11 2v3M7 13v3M11 13v3M2 7h3M13 7h3M2 11h3M13 11h3"/>
+          </svg>
+        </div>
         <div class="val" id="card-epix">—</div>
-        <div class="lbl">e⁻/pix/frame &nbsp;<span style="font-size:.72rem;font-weight:400" id="card-epix-lbl"></span></div>
+        <div class="lbl">e⁻/pix/frame &nbsp;<span style="font-size:.68rem;font-weight:400" id="card-epix-lbl"></span></div>
+      </div>
+      <div class="card-stat">
+        <div class="card-icon teal">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+            <circle cx="9" cy="9" r="6.5"/>
+            <circle cx="9" cy="9" r="2.5"/>
+            <path d="M9 1v3M9 14v3M1 9h3M14 9h3"/>
+          </svg>
+        </div>
+        <div class="val" id="card-rv">—</div>
+        <div class="lbl">RV precision</div>
       </div>
     </div>
 
@@ -411,6 +529,23 @@
       </div>
     </div>
 
+    <!-- Magnitude table -->
+    <div id="mag-table-box">
+      <h6>SNR &amp; RV precision — current settings</h6>
+      <table id="mag-table">
+        <thead>
+          <tr>
+            <th>r&nbsp;mag</th>
+            <th>Signal&nbsp;(ph)</th>
+            <th>SNR</th>
+            <th>σ<sub>RV</sub></th>
+            <th>t&nbsp;→&nbsp;SNR&nbsp;<span id="tgt-snr-lbl">100</span></th>
+          </tr>
+        </thead>
+        <tbody id="mag-table-body"></tbody>
+      </table>
+    </div>
+
     <!-- Noise budget -->
     <div id="noise-box">
       <h6>Noise budget</h6>
@@ -422,12 +557,14 @@
             <span><span class="leg-dot" style="background:#2e88c8"></span>Shot (<span id="b-shot">—</span>%)</span>
             <span><span class="leg-dot" style="background:#e07b39"></span>CIC (<span id="b-cic">—</span>%)</span>
             <span><span class="leg-dot" style="background:#7b5ea7"></span>Dark (<span id="b-dark">—</span>%)</span>
+            <span><span class="leg-dot" style="background:#1a9080"></span>Sky (<span id="b-sky">—</span>%)</span>
           </div>
         </div>
         <div style="font-size:.82rem; color:#5a6a7e; line-height:1.9; font-weight:500">
           Signal photons: <strong style="color:#1a3a5c" id="nb-phot">—</strong><br/>
           CIC electrons&nbsp;&nbsp;: <strong style="color:#1a3a5c" id="nb-cic-e">—</strong> &nbsp;<span style="font-weight:400;color:#8a9ab0">(<span id="nsub-echo">1</span> reads × <span id="nb-spix">8</span> pix × 0.001)</span><br/>
-          Dark electrons : <strong style="color:#1a3a5c" id="nb-dark-e">—</strong>
+          Dark electrons : <strong style="color:#1a3a5c" id="nb-dark-e">—</strong><br/>
+          Sky electrons&nbsp;&nbsp;&nbsp;: <strong style="color:#1a3a5c" id="nb-sky-e">—</strong> &nbsp;<span style="font-weight:400;color:#8a9ab0" id="nb-sky-label"></span>
         </div>
       </div>
     </div>
@@ -488,9 +625,32 @@ function computeSNR(mag, exptimeS, nSub, cfg) {
   const dark   = cfg.detector.dark_current_e_per_s_per_pix;
   const cicVar  = cic  * sp * nSub;
   const darkVar = dark * sp * exptimeS;
-  const variance = Ntot + cicVar + darkVar;
+  let skyVar = 0;
+  if (cfg.sky && cfg.sky.mag_per_arcsec2 < 90) {
+    const fiberArea = Math.PI * Math.pow(cfg.sky.fiber_diam_arcsec / 2, 2);
+    skyVar = photonsPerResel(cfg.sky.mag_per_arcsec2, exptimeS, cfg) * fiberArea;
+  }
+  const variance = Ntot + cicVar + darkVar + skyVar;
   return { snr: variance > 0 ? Ntot / Math.sqrt(variance) : 0,
-           Ntot, cicVar, darkVar };
+           Ntot, cicVar, darkVar, skyVar };
+}
+
+// ── Inverse: exposure time to reach a target SNR ────────────────────────
+// SNR = α√t / √γ  →  t = SNR² × γ / α²
+// α = signal photons/s, γ = total variance per second
+function inverseTime(snrTarget, mag, frameRate, cfg) {
+  const alpha = photonsPerResel(mag, 1, cfg);
+  if (alpha <= 0) return null;
+  const sp = cfg.detector.spatial_extent_pix;
+  let gamma = alpha
+    + cfg.detector.clock_induced_charges_e_per_pix * sp * frameRate
+    + cfg.detector.dark_current_e_per_s_per_pix * sp;
+  if (cfg.sky && cfg.sky.mag_per_arcsec2 < 90) {
+    const fiberArea = Math.PI * Math.pow(cfg.sky.fiber_diam_arcsec / 2, 2);
+    gamma += photonsPerResel(cfg.sky.mag_per_arcsec2, 1, cfg) * fiberArea;
+  }
+  const t = (snrTarget * snrTarget * gamma) / (alpha * alpha);
+  return t > 3 * 3600 ? null : t;
 }
 
 // ── Read current UI values ───────────────────────────────────────────────
@@ -500,15 +660,21 @@ function getParams() {
   cfg.detector.spatial_extent_pix         = parseInt(document.getElementById('spatial-val').value);
   cfg.detector.dark_current_e_per_s_per_pix = parseFloat(document.getElementById('dark-val').value);
   cfg.detector.clock_induced_charges_e_per_pix = parseFloat(document.getElementById('cic-val').value);
+  cfg.sky = {
+    mag_per_arcsec2:   parseFloat(document.getElementById('sky-val').value)   || 99,
+    fiber_diam_arcsec: parseFloat(document.getElementById('fiber-val').value) || 2.0,
+  };
   const exptime   = parseFloat(document.getElementById('exptime-val').value);
   const frameRate = parseFloat(document.getElementById('framerate-val').value) || 4;
   const nSub      = Math.max(1, Math.round(exptime * frameRate));
+  const targetSNR = parseFloat(document.getElementById('target-snr-val').value) || 100;
   return {
     cfg,
     exptime,
     frameRate,
     nSub,
-    tMag: parseFloat(document.getElementById('tmag-val').value),
+    tMag:      parseFloat(document.getElementById('tmag-val').value),
+    targetSNR,
   };
 }
 
@@ -551,9 +717,22 @@ const RV_REFS = [
 
 let plotsInitialized = false;
 
+// ── RV precision from SNR (calibrated: SNR=200 → ~1 m/s) ────────────────
+function rvPrecision(snr) {
+  if (snr <= 0) return null;
+  return 200 / snr;
+}
+function fmtRV(rv) {
+  if (rv === null) return '—';
+  if (rv < 1)   return rv.toFixed(2) + ' m/s';
+  if (rv < 10)  return rv.toFixed(1) + ' m/s';
+  if (rv < 100) return rv.toFixed(0) + ' m/s';
+  return '> 100 m/s';
+}
+
 // ── Main update function ─────────────────────────────────────────────────
 function update() {
-  const { cfg, exptime, frameRate, nSub, tMag } = getParams();
+  const { cfg, exptime, frameRate, nSub, tMag, targetSNR } = getParams();
 
   const magMin = cfg.photometry.mag_min;
   const magMax = cfg.photometry.mag_max;
@@ -591,27 +770,65 @@ function update() {
   document.getElementById('card-epix-lbl').textContent =
     ePerPixFrame > satLim ? `⚠ > ${satLim} e⁻ limit` : `limit ${satLim} e⁻`;
 
+  // RV precision card
+  const rv = rvPrecision(pt.snr);
+  const rvEl = document.getElementById('card-rv');
+  rvEl.textContent = fmtRV(rv);
+  rvEl.className = 'val ' + snrClass(pt.snr);
+
+  // ── Exposure planning: time required for target SNR ──────────────────
+  const tReq = inverseTime(targetSNR, tMag, frameRate, cfg);
+  document.getElementById('t-req-display').textContent = fmtTime(tReq);
+  document.getElementById('tgt-snr-lbl').textContent = targetSNR;
+
   // ── Noise budget bar ─────────────────────────────────────────────────
-  const totVar  = pt.Ntot + pt.cicVar + pt.darkVar;
+  const totVar  = pt.Ntot + pt.cicVar + pt.darkVar + pt.skyVar;
   const shotPct = totVar > 0 ? (pt.Ntot    / totVar * 100) : 0;
   const cicPct  = totVar > 0 ? (pt.cicVar  / totVar * 100) : 0;
   const darkPct = totVar > 0 ? (pt.darkVar / totVar * 100) : 0;
+  const skyPct  = totVar > 0 ? (pt.skyVar  / totVar * 100) : 0;
 
   document.getElementById('bar-stack').innerHTML =
     `<div class="bar-seg bar-shot" style="width:${shotPct.toFixed(1)}%"></div>` +
     `<div class="bar-seg bar-cic"  style="width:${cicPct.toFixed(1)}%"></div>` +
-    `<div class="bar-seg bar-dark" style="width:${darkPct.toFixed(1)}%"></div>`;
+    `<div class="bar-seg bar-dark" style="width:${darkPct.toFixed(1)}%"></div>` +
+    `<div class="bar-seg bar-sky"  style="width:${skyPct.toFixed(1)}%"></div>`;
 
   document.getElementById('b-shot').textContent  = shotPct.toFixed(1);
   document.getElementById('b-cic').textContent   = cicPct.toFixed(1);
   document.getElementById('b-dark').textContent  = darkPct.toFixed(1);
-  document.getElementById('nb-phot').textContent = pt.Ntot.toFixed(0);
-  document.getElementById('nb-cic-e').textContent = pt.cicVar.toFixed(2);
+  document.getElementById('b-sky').textContent   = skyPct.toFixed(1);
+  document.getElementById('nb-phot').textContent  = pt.Ntot.toFixed(0);
+  document.getElementById('nb-cic-e').textContent  = pt.cicVar.toFixed(2);
   document.getElementById('nb-dark-e').textContent = pt.darkVar.toFixed(2);
+  document.getElementById('nb-sky-e').textContent  = pt.skyVar.toFixed(2);
+  const fiberArea = cfg.sky ? (Math.PI * Math.pow(cfg.sky.fiber_diam_arcsec / 2, 2)).toFixed(2) : '—';
+  document.getElementById('nb-sky-label').textContent =
+    cfg.sky ? `(${cfg.sky.mag_per_arcsec2} mag/arcsec², ${cfg.sky.fiber_diam_arcsec}" fiber, ${fiberArea} arcsec²)` : '';
   document.getElementById('nsub-echo').textContent = nSub.toLocaleString();
   document.getElementById('nb-spix').textContent   = cfg.detector.spatial_extent_pix;
   document.getElementById('nb-label').textContent  =
     `r = ${tMag.toFixed(1)}, t = ${fmtTime(exptime)}, ${nSub.toLocaleString()} sub-exposures @ ${frameRate} Hz`;
+
+  // ── Magnitude table ──────────────────────────────────────────────────
+  const tableMags = [8, 10, 12, 13, 14, 15, 16, 17, 18, 20];
+  const allMags = [...new Set([...tableMags, tMag])].sort((a, b) => a - b);
+  const tbody = document.getElementById('mag-table-body');
+  tbody.innerHTML = allMags.map(m => {
+    const q = computeSNR(m, exptime, nSub, cfg);
+    const isTarget = Math.abs(m - tMag) < 0.01;
+    const sc = snrClass(q.snr);
+    const snrTxt = q.snr >= 0.1 ? q.snr.toFixed(1) : '< 0.1';
+    const rvTxt = fmtRV(rvPrecision(q.snr));
+    const tR = inverseTime(targetSNR, m, frameRate, cfg);
+    return `<tr${isTarget ? ' class="row-target"' : ''}>
+      <td>${m.toFixed(1)}${isTarget ? ' ★' : ''}</td>
+      <td>${Math.round(q.Ntot).toLocaleString()}</td>
+      <td class="snr-${sc}">${snrTxt}</td>
+      <td>${rvTxt}</td>
+      <td>${fmtTime(tR)}</td>
+    </tr>`;
+  }).join('');
 
   // ── Build Plotly traces ────────────────────────────────────────────────
   const snrMagTrace = {
@@ -860,6 +1077,8 @@ function resetAdvanced() {
   document.getElementById('spatial-val').value = CFG.detector.spatial_extent_pix;
   document.getElementById('dark-val').value    = CFG.detector.dark_current_e_per_s_per_pix;
   document.getElementById('cic-val').value     = CFG.detector.clock_induced_charges_e_per_pix;
+  document.getElementById('sky-val').value     = '21.0';
+  document.getElementById('fiber-val').value   = '2.0';
   update();
 }
 
@@ -880,7 +1099,8 @@ function init() {
     update();
   });
 
-  ['eff-val', 'spatial-val', 'dark-val', 'cic-val'].forEach(id => {
+  ['eff-val', 'spatial-val', 'dark-val', 'cic-val', 'sky-val', 'fiber-val',
+   'target-snr-val'].forEach(id => {
     document.getElementById(id).addEventListener('change', update);
   });
 
