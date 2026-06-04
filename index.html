@@ -765,7 +765,9 @@ function update() {
   const ePerPixFrame = nPhotFrame / cfg.detector.spatial_extent_pix;
   const satLim = cfg.detector.saturation_e_per_pix_per_frame;
   const epixEl = document.getElementById('card-epix');
-  epixEl.textContent = ePerPixFrame.toFixed(2);
+  epixEl.textContent = ePerPixFrame < 0.1
+    ? ePerPixFrame.toExponential(2)
+    : ePerPixFrame.toFixed(2);
   epixEl.className = 'val ' + (ePerPixFrame > satLim ? 'bad' : ePerPixFrame > satLim * 0.5 ? 'warn' : 'good');
   document.getElementById('card-epix-lbl').textContent =
     ePerPixFrame > satLim ? `⚠ > ${satLim} e⁻ limit` : `limit ${satLim} e⁻`;
